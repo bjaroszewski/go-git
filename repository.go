@@ -334,7 +334,22 @@ func dotGitFileToOSFilesystem(path string, fs billy.Filesystem) (bfs billy.Files
 // if the new repository will be bare or normal. If the path is not empty
 // ErrRepositoryAlreadyExists is returned.
 func PlainClone(path string, isBare bool, o *CloneOptions) (*Repository, error) {
-	return PlainCloneContext(context.Background(), path, isBare, o)
+	r, err := PlainCloneContext(context.Background(), path, isBare, o)
+	switch err {
+	case transport.ErrAuthenticationRequired:
+		os.RemoveAll(path)
+		return nil, err
+	case transport.ErrAuthorizationFailed:
+		os.RemoveAll(path)
+		return nil, err
+	case transport.ErrRepositoryAlreadyExists:
+		os.RemoveAll(path)
+		return nil, err
+	default:
+		os.Remove(path)
+		return nil, err
+	}
+	return r, err
 }
 
 // PlainCloneContext a repository into the path with the given options, isBare
