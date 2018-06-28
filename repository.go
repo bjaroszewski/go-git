@@ -345,7 +345,6 @@ func PlainClone(path string, isBare bool, o *CloneOptions) (*Repository, error) 
 			os.RemoveAll(path)
 			return nil, err
 		case ErrRepositoryAlreadyExists:
-			os.RemoveAll(path)
 			return nil, err
 		default:
 			os.Remove(path)
