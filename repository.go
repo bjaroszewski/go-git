@@ -335,19 +335,21 @@ func dotGitFileToOSFilesystem(path string, fs billy.Filesystem) (bfs billy.Files
 // ErrRepositoryAlreadyExists is returned.
 func PlainClone(path string, isBare bool, o *CloneOptions) (*Repository, error) {
 	r, err := PlainCloneContext(context.Background(), path, isBare, o)
-	switch err {
-	case transport.ErrAuthenticationRequired:
-		os.RemoveAll(path)
-		return nil, err
-	case transport.ErrAuthorizationFailed:
-		os.RemoveAll(path)
-		return nil, err
-	case transport.ErrRepositoryAlreadyExists:
-		os.RemoveAll(path)
-		return nil, err
-	default:
-		os.Remove(path)
-		return nil, err
+	if err != nil {
+		switch err {
+		case transport.ErrAuthenticationRequired:
+			os.RemoveAll(path)
+			return nil, err
+		case transport.ErrAuthorizationFailed:
+			os.RemoveAll(path)
+			return nil, err
+		case transport.ErrRepositoryAlreadyExists:
+			os.RemoveAll(path)
+			return nil, err
+		default:
+			os.Remove(path)
+			return nil, err
+		}
 	}
 	return r, err
 }
