@@ -344,7 +344,7 @@ func PlainClone(path string, isBare bool, o *CloneOptions) (*Repository, error) 
 		case transport.ErrAuthorizationFailed:
 			os.RemoveAll(path)
 			return nil, err
-		case transport.ErrRepositoryAlreadyExists:
+		case ErrRepositoryAlreadyExists:
 			os.RemoveAll(path)
 			return nil, err
 		default:
