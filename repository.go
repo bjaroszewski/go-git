@@ -16,7 +16,6 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing/format/packfile"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	"gopkg.in/src-d/go-git.v4/plumbing/storer"
-	"gopkg.in/src-d/go-git.v4/plumbing/transport"
 	"gopkg.in/src-d/go-git.v4/storage"
 	"gopkg.in/src-d/go-git.v4/storage/filesystem"
 	"gopkg.in/src-d/go-git.v4/utils/ioutil"
@@ -336,21 +335,11 @@ func dotGitFileToOSFilesystem(path string, fs billy.Filesystem) (bfs billy.Files
 // ErrRepositoryAlreadyExists is returned.
 func PlainClone(path string, isBare bool, o *CloneOptions) (*Repository, error) {
 	r, err := PlainCloneContext(context.Background(), path, isBare, o)
-	if err != nil {
-		switch err {
-		case transport.ErrAuthenticationRequired:
-			os.RemoveAll(path)
-			return nil, err
-		case transport.ErrAuthorizationFailed:
-			os.RemoveAll(path)
-			return nil, err
-		case ErrRepositoryAlreadyExists:
-			return nil, err
-		default:
-			os.Remove(path)
-			return nil, err
-		}
+	if err != nil && err != ErrRepositoryAlreadyExists {
+		os.RemoveAll(path)
+		return nil, err
 	}
+
 	return r, err
 }
 
@@ -367,7 +356,13 @@ func PlainCloneContext(ctx context.Context, path string, isBare bool, o *CloneOp
 		return nil, err
 	}
 
-	return r, r.clone(ctx, o)
+	err := r.clone(ctx, o)
+	if err != nil && err != ErrRepositoryAlreadyExists {
+		os.RemoveAll(path)
+		return nil, err
+	}
+
+	return r, err
 }
 
 func newRepository(s storage.Storer, worktree billy.Filesystem) *Repository {
