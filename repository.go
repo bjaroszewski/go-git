@@ -51,6 +51,7 @@ var (
 	ErrIsBareRepository          = errors.New("worktree not available in a bare repository")
 	ErrUnableToResolveCommit     = errors.New("unable to resolve commit")
 	ErrPackedObjectsNotSupported = errors.New("Packed objects not supported")
+	ErrDirNotEmpty               = errors.New("directory is not empty")
 )
 
 // Repository represents a git repository
@@ -352,9 +353,8 @@ func PlainCloneContext(ctx context.Context, path string, isBare bool, o *CloneOp
 	dirExist := false
 
 	file, err := os.Stat(path)
-	pathNotExist := os.IsNotExist(err)
 
-	if !pathNotExist {
+	if !os.IsNotExist(err) {
 		dirExist = file.IsDir()
 	}
 
@@ -365,13 +365,13 @@ func PlainCloneContext(ctx context.Context, path string, isBare bool, o *CloneOp
 		}
 		defer fh.Close()
 
-		names, err := fh.Readdirnames(1)
+		_, err = fh.Readdirnames(1)
 
-		if err == io.EOF && len(names) == 0 {
-			dirEmpty = true
-		} else {
+		if err != nil && err == io.EOF {
 			return nil, ErrDirNotEmpty
+
 		}
+		dirEmpty = true
 	}
 
 	r, err := PlainInit(path, isBare)

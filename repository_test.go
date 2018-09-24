@@ -584,7 +584,7 @@ func (s *RepositorySuite) TestPlainCloneContextWithIncorrectRepo(c *C) {
 	cancel()
 
 	tmpDir := c.MkDir()
-	repoDir := filepath.Join(tmpDir, "repoDir") //path.Join(path.Dir(tmpDir), "repoDir")
+	repoDir := filepath.Join(tmpDir, "repoDir")
 	r, err := PlainCloneContext(ctx, repoDir, false, &CloneOptions{
 		URL: "incorrectOnPurpose",
 	})
