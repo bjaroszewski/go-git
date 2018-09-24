@@ -367,7 +367,7 @@ func PlainCloneContext(ctx context.Context, path string, isBare bool, o *CloneOp
 
 		_, err = fh.Readdirnames(1)
 
-		if err != nil && err == io.EOF {
+		if err != nil && err != io.EOF {
 			return nil, ErrDirNotEmpty
 
 		}
