@@ -353,6 +353,9 @@ func PlainCloneContext(ctx context.Context, path string, isBare bool, o *CloneOp
 	dirExist := false
 
 	file, err := os.Stat(path)
+	if err != nil && err != err.(*os.PathError) {
+		return nil, err
+	}
 
 	if !os.IsNotExist(err) {
 		dirExist = file.IsDir()
@@ -365,13 +368,15 @@ func PlainCloneContext(ctx context.Context, path string, isBare bool, o *CloneOp
 		}
 		defer fh.Close()
 
-		_, err = fh.Readdirnames(1)
-
-		if err != nil && err != io.EOF {
-			return nil, ErrDirNotEmpty
-
+		names, err = fh.Readdirnames(1)
+		if err != nil {
+			if err == io.EOF {
+				dirEmpty = true
+			} else if len(names) != 0 {
+				return nil, ErrDirNotEmpty
+			}
+			return nil, err
 		}
-		dirEmpty = true
 	}
 
 	r, err := PlainInit(path, isBare)
